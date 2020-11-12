@@ -67,7 +67,7 @@ class BudgetCalculator {
   }
 
   fetchData() {
-    window.fetch('http://budget.council.nyc/assets/data/summary.json')
+    window.fetch('//budget.council.nyc/assets/data/summary.json')
       .then((response) => {
         const res = response.clone();
         return res.json()
