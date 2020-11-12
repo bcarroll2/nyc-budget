@@ -22,11 +22,12 @@ class BudgetCalculator {
       stateIncomeTax: document.getElementById('stateIncomeTax'),
       localIncomeTax: document.getElementById('localIncomeTax'),
       calculateBtn: document.querySelector('.calculate-tax'),
-      shopAllAgenciesBtn: document.querySelector('.show-all-agencies'),
+      showAllAgenciesBtn: document.querySelector('.show-all-agencies'),
       showTopTenAgenciesBtn: document.querySelector('.show-top-ten-agencies'),
       totalTaxLabel: document.querySelector('.total-tax-label'),
       totalNYCBudgetLabel: document.querySelector('.total-nyc-budget-label'),
       tableContainer: document.querySelector('.table-container'),
+      downArrowContainer: document.querySelector('.down-arrow-container'),
       chart: document.getElementById('chart'),
     }
 
@@ -57,6 +58,7 @@ class BudgetCalculator {
 
   updateTax() {
     this.refs.totalTaxLabel.innerHTML = this.getTotalTaxAmount();
+    this.refs.downArrowContainer.classList.add('visible');
     this.makeTable(this.departmentData.agencies);
   }
 
@@ -191,19 +193,30 @@ class BudgetCalculator {
   }
 
   showAllAgencies() {
+    this.refs.showAllAgenciesBtn.classList.add('active');
+    this.refs.showTopTenAgenciesBtn.classList.remove('active');
     this.updateChart(this.departmentData.agencies);
     this.makeTable(this.departmentData.agencies)
   }
 
   showTopTenAgencies() {
+    this.refs.showTopTenAgenciesBtn.classList.add('active');
+    this.refs.showAllAgenciesBtn.classList.remove('active');
     this.updateChart(this.topTenAgencies);
     this.makeTable(this.topTenAgencies)
   }
 
   bindListeners() {
     this.refs.calculateBtn.addEventListener('click', this.boundUpdateTax);
-    this.refs.shopAllAgenciesBtn.addEventListener('click', this.boundShowAllAgencies);
+    this.refs.showAllAgenciesBtn.addEventListener('click', this.boundShowAllAgencies);
     this.refs.showTopTenAgenciesBtn.addEventListener('click', this.boundShowTopTenAgencies);
+    this.refs.downArrowContainer.addEventListener('click', () => {
+      const rect = this.refs.tableContainer.getBoundingClientRect()
+      window.scrollTo({
+        top: window.pageYOffset + rect.top,
+        behavior: 'smooth',
+      })
+    })
   }
 
 }
