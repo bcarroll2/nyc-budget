@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+/src/keys.js
+
+# Compiled output
+/build
+/build/*
+/build-misc
+/build-misc/*
+
+# Logs
+*.log
+*.bak
+*.vscode
+
+# Misc
+.DS_Store
+*.swp

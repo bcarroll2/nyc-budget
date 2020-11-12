@@ -1,0 +1,75 @@
+body {
+  background: whitesmoke;
+}
+
+.input-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0px;
+}
+.form-container {
+  height: 100vh;
+  width: 300px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.calculate-tax {
+  width: 100%;
+}
+
+.chart-container {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 800px;
+}
+
+.chart-button-container {
+  margin-top: 10px;
+}
+
+.table-container {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.table-header {
+
+}
+
+.row {
+  margin: 10px;
+}
+
+.cell {
+  display: inline-block;
+  padding: 20px;
+  border: 1px solid black;
+  width: 250px;
+}
+
+.agency-name-label {
+
+}
+
+.amount-label {
+
+}
+
+.proportion-label {
+
+}
+
+.your-contribution-label {
+
+}
