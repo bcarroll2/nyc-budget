@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Budget Stuff</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+  </head>
+  <body>
+    <div class="chart-container">
+      <canvas id="chart" width="400" height="400"></canvas>
+      <div class="chart-button-container">
+        <button class="button button-color-one show-all-agencies">Show All</button>
+        <button class="button button-color-one show-top-ten-agencies">Shop Top 10</button>
+      </div>
+    </div>
+
+    <div class="form-container">
+      <div class="input-item">
+        <label for="federalIncomeTax">Federal Income Tax:</label>
+        <input type="number" id="federalIncomeTax" name="federalIncomeTax" value="0" required>
+      </div>
+
+      <div class="input-item">
+        <label for="stateIncomeTax">State Income Tax:</label>
+        <input type="number" id="stateIncomeTax" name="stateIncomeTax" value="0" required>
+      </div>
+
+      <div class="input-item">
+        <label for="localIncomeTax">Local Income Tax:</label>
+        <input type="number" id="localIncomeTax" name="localIncomeTax" value="0" required>
+      </div>
+      <button class="calculate-tax">Calculate</button>
+
+      <div class="input-item">
+        <span>Your contribution:</span>
+        <span class="total-tax-label">0.00</span>
+      </div>
+
+      <div class="input-item">
+        <span>Total NYC Expense Budget:</span>
+        <span class="total-nyc-budget-label"></span>
+      </div>
+
+      <div class="input-item">
+        <div class="down-arrow-container">
+          <div class="down-arrow"></div>
+          <span>Scroll Down</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="table-container">
+    </div>
+    <script src="main.js" async defer></script>
+  </body>
+</html>
