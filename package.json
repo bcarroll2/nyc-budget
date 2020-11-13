@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "chart.js": "^2.9.4",
+    "chartjs-plugin-labels": "^1.1.0",
     "d3": "^6.2.0"
   }
 }

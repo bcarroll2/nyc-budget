@@ -10,9 +10,7 @@ const TOTAL_NYC_BUDGET = 95298823318;
 const FEDERAL_GRANT_PERCENT_OF_NYC_BUDGET = 0.10;
 const STATE_GRANT_PERCENT_OF_NYC_BUDGET = 0.17;
 
-// The total amount of money given to NYC budget from Grants
-const TOTAL_FEDERAL_GRANT = FEDERAL_GRANT_PERCENT_OF_NYC_BUDGET * TOTAL_NYC_BUDGET;
-const TOTAL_STATE_GRANT = STATE_GRANT_PERCENT_OF_NYC_BUDGET * TOTAL_NYC_BUDGET;
+const BUDGET_DATA_URL = '//budget.council.nyc/assets/data/summary.json';
 
 class BudgetCalculator {
   constructor() {
@@ -26,15 +24,17 @@ class BudgetCalculator {
       showTopTenAgenciesBtn: document.querySelector('.show-top-ten-agencies'),
       totalTaxLabel: document.querySelector('.total-tax-label'),
       totalNYCBudgetLabel: document.querySelector('.total-nyc-budget-label'),
+      header: document.querySelector('header'),
       tableContainer: document.querySelector('.table-container'),
       downArrowContainer: document.querySelector('.down-arrow-container'),
       chart: document.getElementById('chart'),
     }
 
+    this.state = {}
+
     this.boundUpdateTax = this.updateTax.bind(this);
     this.boundShowAllAgencies = this.showAllAgencies.bind(this);
     this.boundShowTopTenAgencies = this.showTopTenAgencies.bind(this);
-    this.updateNYCBudgetLabel();
     this.bindListeners();
     this.fetchData();
   }
@@ -43,37 +43,42 @@ class BudgetCalculator {
     const federalIncomeTax = window.parseInt(this.refs.federalIncomeTax.value);
     const stateIncomeTax = window.parseInt(this.refs.stateIncomeTax.value);
     const localIncomeTax = window.parseInt(this.refs.localIncomeTax.value);
+    const {
+      totalFederalGrant,
+      totalStateGrant,
+    } = this.state;
 
     // Equation is
     // ((Total Federal Grant / Total Federal Budget) * Federal Income Tax) +
     // ((Total State Grant / Total State Budget) * State Income Tax) + 
     // Local Income Tax
-
     return (
-      window.parseFloat(((TOTAL_FEDERAL_GRANT / TOTAL_FEDERAL_BUDGET) * federalIncomeTax) + 
-      ((TOTAL_STATE_GRANT / TOTAL_STATE_BUDGET) * stateIncomeTax) + 
-      localIncomeTax).toFixed(2)
+      window.parseFloat(
+        ((totalFederalGrant / TOTAL_FEDERAL_BUDGET) * federalIncomeTax) + 
+        ((totalStateGrant / TOTAL_STATE_BUDGET) * stateIncomeTax) + 
+        localIncomeTax
+      ).toFixed(2)
     );
   }
 
   updateTax() {
     this.refs.totalTaxLabel.innerHTML = this.getTotalTaxAmount();
     this.refs.downArrowContainer.classList.add('visible');
-    this.makeTable(this.departmentData.agencies);
+    this.makeTable(this.state.agencies);
   }
 
   updateNYCBudgetLabel() {
-    this.refs.totalNYCBudgetLabel.innerHTML = new Intl.NumberFormat('en-US').format(TOTAL_NYC_BUDGET);
+    this.refs.totalNYCBudgetLabel.innerHTML = `$${new Intl.NumberFormat('en-US').format(this.state.totalBudget)}`;
   }
 
   fetchData() {
-    window.fetch('//budget.council.nyc/assets/data/summary.json')
+    window.fetch(BUDGET_DATA_URL)
       .then((response) => {
         const res = response.clone();
         return res.json()
       })
       .then((data) => {
-        this.departmentData = data.reduce((acc, item) => {
+        const budgetData = data.reduce((acc, item) => {
           const agency = item.agency;
           const existingAgency = acc.agencies.find((agencyObj) => {
             return agencyObj.name === agency
@@ -81,12 +86,10 @@ class BudgetCalculator {
 
           if (existingAgency) {
             existingAgency.amount += item.amount;
-            existingAgency.proportionOfBudget = existingAgency.amount / TOTAL_NYC_BUDGET;
           } else {
             acc.agencies.push({
               name: item.agency,
               amount: item.amount,
-              proportionOfBudget: item.amount / TOTAL_NYC_BUDGET,
             });
           }
           acc.totalBudget += item.amount;
@@ -96,7 +99,7 @@ class BudgetCalculator {
           agencies: [],
         })
 
-        this.departmentData.agencies.sort((a, b) => {
+        budgetData.agencies.sort((a, b) => {
           if (a.amount > b.amount) {
             return -1;
           } 
@@ -106,10 +109,19 @@ class BudgetCalculator {
           return 0;
         });
 
-        this.topTenAgencies = this.getTopTenAgencies(this.departmentData.agencies);
+        this.setState({
+          totalBudget: budgetData.totalBudget,
+          agencies: budgetData.agencies,
+          topTenAgencies: this.getTopTenAgencies(budgetData.agencies),
+          // The total amount of money given to NYC budget from Grants
+          totalFederalGrant: FEDERAL_GRANT_PERCENT_OF_NYC_BUDGET * budgetData.totalBudget,
+          totalStateGrant: STATE_GRANT_PERCENT_OF_NYC_BUDGET * budgetData.totalBudget,
+        });
         
-        console.log(this.departmentData.agencies);
-        this.makeChart(this.departmentData.agencies);
+        this.topTenAgencies = this.getTopTenAgencies(this.state.agencies);
+        console.log(this.state);
+        this.updateNYCBudgetLabel();
+        this.makeChart(this.state.agencies);
       });
   }
 
@@ -131,8 +143,10 @@ class BudgetCalculator {
   }
 
   makeChart(data) {
-    this.generateRandomColorsArray(data.length);
-    
+    if (!this.backgroundColors) {
+      this.generateRandomColorsArray(data.length);
+    }
+
     this.pieChart = new Chart(this.refs.chart, {
       type: 'doughnut',
       data: {
@@ -148,18 +162,19 @@ class BudgetCalculator {
       options: {
         tooltips: {
           callbacks: {
-            label: function(tooltipItem, data) {
+            label: (tooltipItem, data) => {
               const label = data.labels[tooltipItem.index];
               const amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
               const formattedAmount = new Intl.NumberFormat('en-US').format(amount);
-              return `${label}: $${formattedAmount}`;
+              const percent = window.parseFloat(amount / this.state.totalBudget * 100).toFixed(3)
+              return `${label}: $${formattedAmount} (${percent}%)`;
             }
           }
         },
         legend: {
           display: false,
         },
-      }
+      },
     });
   }
 
@@ -168,35 +183,40 @@ class BudgetCalculator {
     return topTenAgencies;
   }
 
+  setState(nextState) {
+    this.state = Object.assign({}, this.state, nextState);
+  }
+
   makeTable(data) {
     const yourContribution = this.getTotalTaxAmount();
     this.refs.tableContainer.innerHTML = `
       <div class="table-header row">
-        <span class="cell agency-name-label">Agency Name</span>
-        <span class="cell amount-label">Agency Amount</span>
+        <span class="cell agency-name-label">Agency</span>
+        <span class="cell amount-label">Amount</span>
         <span class="cell proportion-label">Percent of Budget</span>
         <span class="cell your-contribution-label">Your Contribution (of $${yourContribution})</span>
       </div>
       ${data.map((agency) => {
+        const proportionOfBudget = agency.amount / this.state.totalBudget;
         return (
           `
           <div class="row">
             <span class="cell agency-name-label">${agency.name}</span>
             <span class="cell amount-label">$${new Intl.NumberFormat('en-US').format(agency.amount)}</span>
-            <span class="cell proportion-label">${window.parseFloat(100 * agency.proportionOfBudget).toFixed(2)}%</span>
-            <span class="cell your-contribution-label">$${new Intl.NumberFormat('en-US').format(yourContribution * agency.proportionOfBudget)}</span>
+            <span class="cell proportion-label">${window.parseFloat(100 * proportionOfBudget).toFixed(3)}%</span>
+            <span class="cell your-contribution-label">$${new Intl.NumberFormat('en-US').format(yourContribution * proportionOfBudget)}</span>
           </div>
           `
         );
       }).join('')}
-    `
+    `;
   }
 
   showAllAgencies() {
     this.refs.showAllAgenciesBtn.classList.add('active');
     this.refs.showTopTenAgenciesBtn.classList.remove('active');
-    this.updateChart(this.departmentData.agencies);
-    this.makeTable(this.departmentData.agencies)
+    this.updateChart(this.state.agencies);
+    this.makeTable(this.state.agencies)
   }
 
   showTopTenAgencies() {
@@ -211,9 +231,10 @@ class BudgetCalculator {
     this.refs.showAllAgenciesBtn.addEventListener('click', this.boundShowAllAgencies);
     this.refs.showTopTenAgenciesBtn.addEventListener('click', this.boundShowTopTenAgencies);
     this.refs.downArrowContainer.addEventListener('click', () => {
-      const rect = this.refs.tableContainer.getBoundingClientRect()
+      const tableRect = this.refs.tableContainer.getBoundingClientRect();
+      const headerRect = this.refs.header.getBoundingClientRect();
       window.scrollTo({
-        top: window.pageYOffset + rect.top,
+        top: window.pageYOffset + tableRect.top - headerRect.height,
         behavior: 'smooth',
       })
     })
